@@ -11,7 +11,7 @@ const AuditLogPage = () => {
     const fetchLogs = async () => {
       try {
         setLoading(true);
-        const res = await axios.get('/api/audit');
+        const res = await axios.get('https://smartca-backend.onrender.com/api/audit');
         setLogs(res.data);
       } catch (err) {
         setError('Failed to fetch audit logs.');

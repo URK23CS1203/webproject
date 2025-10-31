@@ -12,7 +12,7 @@ const MyTasksPage = () => {
       try {
         setLoading(true);
         // This calls the new API route we just made
-        const res = await axios.get('/api/tasks/mytasks');
+        const res = await axios.get('https://smartca-backend.onrender.com/api/tasks/mytasks');
         setTasks(res.data);
       } catch (err) {
         setError('Failed to fetch tasks.');

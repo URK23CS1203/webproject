@@ -1,50 +1,58 @@
-import React, { useState, useEffect, useContext } from 'react';
+// --- 1. IMPORT `useCallback` TO FIX THE WARNING ---
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Form } from 'react-bootstrap';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; // Import AuthContext
+import { AuthContext } from '../context/AuthContext'; 
+
+// --- 2. DEFINE YOUR LIVE BACKEND URL ---
+// (Replace this with your actual Render.com backend URL)
+const API_BASE_URL = 'https://smartca-backend.onrender.com';
 
 const ClientPage = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // --- States for the Modal Form ---
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     pan: '',
-    nameAsPerPAN: '', // Field for "Name as per PAN"
+    nameAsPerPAN: '', 
     gstin: ''
   });
   
-  const { user } = useContext(AuthContext); // Get the logged-in user
+  const { user } = useContext(AuthContext); 
 
-  // --- Modal Show/Hide Functions ---
   const handleClose = () => {
     setShowModal(false);
-    // Reset form data when closing
     setFormData({ name: '', email: '', phone: '', pan: '', nameAsPerPAN: '', gstin: '' });
   };
   const handleShow = () => setShowModal(true);
 
+  // --- 3. WRAP fetchClients in useCallback ---
+  // This fixes the 'exhaustive-deps' warning by making the function stable
+  const fetchClients = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // --- 4. USE THE LIVE URL ---
+      const res = await axios.get(`${API_BASE_URL}/api/clients`);
+      
+      setClients(res.data);
+    } catch (err) {
+      setError('Failed to fetch clients.');
+    } finally {
+      setLoading(false);
+    }
+  }, []); // The dependency array is empty because it doesn't depend on props or state
+
   // --- Fetch All Clients ---
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get('/api/clients');
-        setClients(res.data);
-      } catch (err) {
-        setError('Failed to fetch clients.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchClients();
-  }, []);
+  }, [fetchClients]); // --- 5. ADD fetchClients AS A DEPENDENCY ---
 
   // --- Form Field Change Handler ---
   const onChange = (e) => {
@@ -55,13 +63,11 @@ const ClientPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send the new client data to the backend
-      const res = await axios.post('/api/clients', formData);
       
-      // Add the new client to the top of the list in real-time
+      // --- 6. USE THE LIVE URL ---
+      const res = await axios.post(`${API_BASE_URL}/api/clients`, formData);
+      
       setClients([res.data, ...clients]);
-      
-      // Close the modal
       handleClose();
       
     } catch (err) {
@@ -76,10 +82,8 @@ const ClientPage = () => {
     <div>
       <h1 className="mb-4">Client Management</h1>
       
-      {/* --- THIS IS THE "ADD NEW CLIENT" BUTTON --- */}
-      {/* It only appears if you are logged in as 'admin-ca' */}
       {(user.role === 'admin-ca' || user.role === 'auditor') && (
-  <Button variant="primary" className="mb-3" onClick={handleShow}>
+        <Button variant="primary" className="mb-3" onClick={handleShow}>
           Add New Client
         </Button>
       )}
@@ -107,14 +111,13 @@ const ClientPage = () => {
                 <Button as={Link} to={`/tasks/${client._id}`} variant="info" size="sm">
                   View Tasks
                 </Button>
-                {/* You can add Edit/Delete buttons here for Admins */}
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
 
-      {/* --- THIS IS THE "ADD NEW CLIENT" POP-UP FORM (MODAL) --- */}
+      {/* --- ADD NEW CLIENT MODAL --- */}
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Client</Modal.Title>

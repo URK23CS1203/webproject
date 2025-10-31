@@ -12,7 +12,7 @@ const AdminTasksPage = () => {
       try {
         setLoading(true);
         // --- This calls your new backend route ---
-        const res = await axios.get('/api/tasks/assignedtome');
+        const res = await axios.get('https://smartca-backend.onrender.com/api/tasks/assignedtome');
         setTasks(res.data);
       } catch (err) {
         setError('Failed to fetch tasks.');
